@@ -36,6 +36,174 @@ class vncProperties;
 #include "vncsetauth.h"
 #include "inifile.h"
 #include <userenv.h>
+
+struct vncPropertiesStruct
+{
+	int DebugMode;
+	int Avilog;
+	char * path;
+	int DebugLevel;
+
+	int AllowLoopback;
+	int LoopbackOnly;
+	int AllowShutdown;
+	int AllowProperties;
+	int AllowEditClients;
+	int FileTransferTimeout;
+	int KeepAliveInterval;
+	int SocketKeepAliveTimeout;
+
+	int DisableTrayIcon;
+	int MSLogonRequired;
+	int NewMSLogon;
+
+	int UseDSMPlugin;
+	int ConnectPriority;
+	char * DSMPlugin;
+	char * DSMPluginConfig;
+
+	/*
+	myIniFile.WriteInt("admin", "DebugMode", vnclog.GetMode());
+	myIniFile.WriteInt("admin", "Avilog", vnclog.GetVideo());
+	myIniFile.WriteString("admin", "path", vnclog.GetPath());
+	myIniFile.WriteInt("admin", "DebugLevel", vnclog.GetLevel());
+	myIniFile.WriteInt("admin", "AllowLoopback", m_server->LoopbackOk());
+	myIniFile.WriteInt("admin", "LoopbackOnly", m_server->LoopbackOnly());
+	myIniFile.WriteInt("admin", "AllowShutdown", m_allowshutdown);
+	myIniFile.WriteInt("admin", "AllowProperties",  m_allowproperties);
+	myIniFile.WriteInt("admin", "AllowEditClients", m_alloweditclients);
+    myIniFile.WriteInt("admin", "FileTransferTimeout", m_ftTimeout);
+    myIniFile.WriteInt("admin", "KeepAliveInterval", m_keepAliveInterval);
+	// adzm 2010-08
+    myIniFile.WriteInt("admin", "SocketKeepAliveTimeout", m_socketKeepAliveTimeout);
+
+	myIniFile.WriteInt("admin", "DisableTrayIcon", m_server->GetDisableTrayIcon());
+	myIniFile.WriteInt("admin", "MSLogonRequired", m_server->MSLogonRequired());
+	// Marscha@2004 - authSSP: save "New MS-Logon" state
+	myIniFile.WriteInt("admin", "NewMSLogon", m_server->GetNewMSLogon());
+	// sf@2003 - DSM params here
+	myIniFile.WriteInt("admin", "UseDSMPlugin", m_server->IsDSMPluginEnabled());
+	myIniFile.WriteInt("admin", "ConnectPriority", m_server->ConnectPriority());
+	myIniFile.WriteString("admin", "DSMPlugin",m_server->GetDSMPluginName());
+
+	//adzm 2010-05-12 - dsmplugin config
+	myIniFile.WriteString("admin", "DSMPluginConfig", m_server->GetDSMPluginConfig());
+    */
+
+	//user settings:
+
+	int FileTransferEnabled;
+	int FTUserImpersonation;
+	int BlankMonitorEnabled;
+	int BlankInputsOnly;
+	int CaptureAlphaBlending;
+	int BlackAlphaBlending;
+
+	int DefaultScale;
+
+	//int UseDSMPlugin;
+	//char * DSMPlugin;
+	//char * DSMPluginConfig;
+
+	int primary;
+	int secondary;
+
+	// Connection prefs
+	int SocketConnect;
+	int HTTPConnect;
+	int XDMCPConnect;
+	int AutoPortSelect;
+	int PortNumber;
+	int HTTPPortNumber;
+	int InputsEnabled;
+	int LocalInputsDisabled;
+	int IdleTimeout;
+	int EnableJapInput;
+	int clearconsole;
+	int sendbuffer;
+
+	// Connection querying settings
+	int QuerySetting;
+	int QueryTimeout;
+	int QueryAccept;
+	int QueryIfNoLogon;
+
+	// Lock settings
+	int LockSetting;
+
+	// Wallpaper removal
+	int RemoveWallpaper;
+	// UI Effects
+	// adzm - 2010-07 - Disable more effects or font smoothing
+	int RemoveEffects;
+	int RemoveFontSmoothing;
+	// Composit desktop removal
+	int RemoveAero;
+
+	char password[MAXPWLEN];
+	char password2[MAXPWLEN];
+
+	/*
+	// Modif sf@2002
+	myIniFile.WriteInt("admin", "FileTransferEnabled", m_server->FileTransferEnabled());
+	myIniFile.WriteInt("admin", "FTUserImpersonation", m_server->FTUserImpersonation()); // sf@2005
+	myIniFile.WriteInt("admin", "BlankMonitorEnabled", m_server->BlankMonitorEnabled());
+	myIniFile.WriteInt("admin", "BlankInputsOnly", m_server->BlankInputsOnly()); //PGM
+	myIniFile.WriteInt("admin", "CaptureAlphaBlending", m_server->CaptureAlphaBlending()); // sf@2005
+	myIniFile.WriteInt("admin", "BlackAlphaBlending", m_server->BlackAlphaBlending()); // sf@2005
+
+	myIniFile.WriteInt("admin", "DefaultScale", m_server->GetDefaultScale());
+
+	myIniFile.WriteInt("admin", "UseDSMPlugin", m_server->IsDSMPluginEnabled());
+	myIniFile.WriteString("admin", "DSMPlugin",m_server->GetDSMPluginName());
+
+	//adzm 2010-05-12 - dsmplugin config
+	myIniFile.WriteString("admin", "DSMPluginConfig", m_server->GetDSMPluginConfig());
+
+	myIniFile.WriteInt("admin", "primary", m_server->Primary());
+	myIniFile.WriteInt("admin", "secondary", m_server->Secondary());
+
+	// Connection prefs
+	myIniFile.WriteInt("admin", "SocketConnect", m_server->SockConnected());
+	myIniFile.WriteInt("admin", "HTTPConnect", m_server->HTTPConnectEnabled());
+	myIniFile.WriteInt("admin", "XDMCPConnect", m_server->XDMCPConnectEnabled());
+	myIniFile.WriteInt("admin", "AutoPortSelect", m_server->AutoPortSelect());
+	if (!m_server->AutoPortSelect()) {
+		myIniFile.WriteInt("admin", "PortNumber", m_server->GetPort());
+		myIniFile.WriteInt("admin", "HTTPPortNumber", m_server->GetHttpPort());
+	}
+	myIniFile.WriteInt("admin", "InputsEnabled", m_server->RemoteInputsEnabled());
+	myIniFile.WriteInt("admin", "LocalInputsDisabled", m_server->LocalInputsDisabled());
+	myIniFile.WriteInt("admin", "IdleTimeout", m_server->AutoIdleDisconnectTimeout());
+	myIniFile.WriteInt("admin", "EnableJapInput", m_server->JapInputEnabled());
+
+	// Connection querying settings
+	myIniFile.WriteInt("admin", "QuerySetting", m_server->QuerySetting());
+	myIniFile.WriteInt("admin", "QueryTimeout", m_server->QueryTimeout());
+	myIniFile.WriteInt("admin", "QueryAccept", m_server->QueryAccept());
+
+	// Lock settings
+	myIniFile.WriteInt("admin", "LockSetting", m_server->LockSettings());
+
+	// Wallpaper removal
+	myIniFile.WriteInt("admin", "RemoveWallpaper", m_server->RemoveWallpaperEnabled());
+	// UI Effects
+	// adzm - 2010-07 - Disable more effects or font smoothing
+	myIniFile.WriteInt("admin", "RemoveEffects", m_server->RemoveEffectsEnabled());
+	myIniFile.WriteInt("admin", "RemoveFontSmoothing", m_server->RemoveFontSmoothingEnabled());
+	// Composit desktop removal
+	myIniFile.WriteInt("admin", "RemoveAero", m_server->RemoveAeroEnabled());
+
+	// Save the password
+	char passwd[MAXPWLEN];
+	m_server->GetPassword(passwd);
+	myIniFile.WritePassword(passwd);
+	memset(passwd, '\0', MAXPWLEN); //PGM
+	m_server->GetPassword2(passwd); //PGM
+	myIniFile.WritePassword2(passwd); //PGM
+	*/
+};
+
 // The vncProperties class itself
 class vncProperties
 {
@@ -61,6 +229,8 @@ public:
 
 	void Save();
 
+	void FillPropertiesStruct(vncPropertiesStruct * aStruct);
+	void ReadFromPropertiesStruct(vncPropertiesStruct * aStruct);
 
 	// TRAY ICON MENU SETTINGS
 	BOOL AllowProperties() {return m_allowproperties;};
@@ -76,6 +246,9 @@ public:
 	void SaveToIniFile();
 	void SaveUserPrefsToIniFile();
     void ReloadDynamicSettings();
+
+	// Making the loaded user prefs active (also starts server listening!)
+	void ApplyUserPrefs();
 
 	// Implementation
 protected:
@@ -114,7 +287,7 @@ protected:
 	void SaveUserPrefs(HKEY appkey);
 
 	// Making the loaded user prefs active
-	void ApplyUserPrefs();
+	//void ApplyUserPrefs();
 	
 	BOOL m_returncode_valid;
 	BOOL m_dlgvisible;

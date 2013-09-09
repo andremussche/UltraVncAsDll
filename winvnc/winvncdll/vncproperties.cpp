@@ -141,6 +141,7 @@ vncProperties::Init(vncServer *server)
 	m_server->GetPassword(passwd);
 	{
 	    vncPasswd::ToText plain(passwd);
+		/*
 	    if (strlen(plain) == 0)
 			 if (!m_allowproperties || !RunningAsAdministrator ()) {
 				if(m_server->AuthRequired()) {
@@ -174,6 +175,7 @@ vncProperties::Init(vncServer *server)
 					}
 				}
 			}
+			*/
 	}
 	Lock_service_helper=false;
 	return TRUE;
@@ -1878,7 +1880,7 @@ LABELUSERSETTINGS:
 	if (hkLocal != NULL) RegCloseKey(hkLocal);
 
 	// Make the loaded settings active..
-	ApplyUserPrefs();
+	//ApplyUserPrefs();
 }
 
 void
@@ -2388,7 +2390,7 @@ void vncProperties::LoadFromIniFile()
 	m_server->SetSocketKeepAliveTimeout(m_socketKeepAliveTimeout); // adzm 2010-08
     
 
-	ApplyUserPrefs();
+	//ApplyUserPrefs();
 }
 
 
@@ -2590,4 +2592,178 @@ void vncProperties::ReloadDynamicSettings()
 	// Logging/debugging prefs
 	vnclog.SetMode(myIniFile.ReadInt("admin", "DebugMode", 0));
 	vnclog.SetLevel(myIniFile.ReadInt("admin", "DebugLevel", 0));
+}
+
+void vncProperties::FillPropertiesStruct(vncPropertiesStruct * aStruct)
+{
+	aStruct->DebugMode = vnclog.GetMode();
+	aStruct->Avilog = vnclog.GetVideo();
+	aStruct->path = vnclog.GetPath();
+	aStruct->DebugLevel = vnclog.GetLevel();
+
+	aStruct->AllowLoopback = m_server->LoopbackOk();
+	aStruct->LoopbackOnly = m_server->LoopbackOnly();
+	aStruct->AllowShutdown = m_allowshutdown;
+	aStruct->AllowProperties = m_allowproperties;
+	aStruct->AllowEditClients = m_alloweditclients;
+    aStruct->FileTransferTimeout = m_ftTimeout;
+    aStruct->KeepAliveInterval = m_keepAliveInterval;
+    aStruct->SocketKeepAliveTimeout = m_socketKeepAliveTimeout;
+
+	aStruct->DisableTrayIcon = m_server->GetDisableTrayIcon();
+	aStruct->MSLogonRequired = m_pref_RequireMSLogon;
+	aStruct->NewMSLogon = m_pref_NewMSLogon;
+
+	aStruct->UseDSMPlugin = m_pref_UseDSMPlugin;
+	aStruct->ConnectPriority = m_server->ConnectPriority();
+	aStruct->DSMPlugin = m_server->GetDSMPluginName();  //m_pref_szDSMPlugin
+	aStruct->DSMPluginConfig = m_server->GetDSMPluginConfig();  //m_pref_DSMPluginConfig
+
+	//user settings:
+
+	aStruct->FileTransferEnabled = m_pref_EnableFileTransfer;
+	aStruct->FTUserImpersonation = m_pref_FTUserImpersonation;
+	aStruct->BlankMonitorEnabled = m_pref_EnableBlankMonitor;
+	aStruct->BlankInputsOnly = m_pref_BlankInputsOnly;
+	aStruct->DefaultScale = m_pref_DefaultScale;
+	aStruct->CaptureAlphaBlending = m_pref_CaptureAlphaBlending;
+	aStruct->BlackAlphaBlending = m_pref_BlackAlphaBlending;
+
+	aStruct->UseDSMPlugin = m_pref_UseDSMPlugin;
+	//m_pref_szDSMPlugin = aStruct->DSMPlugin;
+	//m_pref_DSMPluginConfig = aStruct->DSMPluginConfig;
+	aStruct->DSMPlugin = m_server->GetDSMPluginName();
+	aStruct->DSMPluginConfig = m_server->GetDSMPluginConfig();
+
+	aStruct->primary = m_pref_Primary;
+	aStruct->secondary = m_pref_Secondary;
+
+	// Connection prefs
+	aStruct->SocketConnect = m_pref_SockConnect;
+	aStruct->HTTPConnect = m_pref_HTTPConnect;
+	aStruct->XDMCPConnect = m_pref_XDMCPConnect;
+	aStruct->AutoPortSelect = m_pref_AutoPortSelect;
+	aStruct->PortNumber = m_pref_PortNumber;
+	aStruct->HTTPPortNumber = m_pref_HttpPortNumber;
+	aStruct->IdleTimeout = m_pref_IdleTimeout;
+
+	// Remote access prefs
+	aStruct->InputsEnabled = m_pref_EnableRemoteInputs;
+	aStruct->LockSetting = m_pref_LockSettings;
+	aStruct->LocalInputsDisabled = m_pref_DisableLocalInputs;
+	aStruct->EnableJapInput = m_pref_EnableJapInput;
+	aStruct->clearconsole = m_pref_clearconsole;
+	aStruct->sendbuffer = G_SENDBUFFER;
+
+	// Connection querying settings
+	aStruct->QuerySetting = m_pref_QuerySetting;
+	aStruct->QueryTimeout = m_pref_QueryTimeout;
+	aStruct->QueryAccept = m_pref_QueryAccept;
+	aStruct->QueryIfNoLogon = m_pref_QueryIfNoLogon;
+
+	// Lock settings
+	aStruct->LockSetting = m_server->LockSettings();
+
+	// Wallpaper removal
+	aStruct->RemoveWallpaper = m_pref_RemoveWallpaper;
+	aStruct->RemoveEffects = m_pref_RemoveEffects;
+	aStruct->RemoveFontSmoothing = m_pref_RemoveFontSmoothing;
+	aStruct->RemoveAero = m_pref_RemoveAero;
+
+	// Save the password
+	//char passwd[MAXPWLEN];
+	//m_server->GetPassword(passwd);
+	vncPasswd::ToText plain(m_pref_passwd);
+    memcpy(aStruct->password, plain, MAXPWLEN);
+	//
+	//m_server->GetPassword2(passwd);
+	vncPasswd::ToText plain2(m_pref_passwd2);
+    memcpy(aStruct->password2, plain2, MAXPWLEN);
+}
+
+void vncProperties::ReadFromPropertiesStruct(vncPropertiesStruct * aStruct)
+{
+	vnclog.SetMode(aStruct->DebugMode);
+	vnclog.SetVideo(aStruct->Avilog);
+	vnclog.SetPath(aStruct->path);
+	vnclog.SetLevel(aStruct->DebugLevel);
+
+	m_server->SetLoopbackOk(aStruct->AllowLoopback);
+	m_server->SetLoopbackOnly(aStruct->LoopbackOnly);
+	m_allowshutdown = aStruct->AllowShutdown;
+	m_allowproperties = aStruct->AllowProperties; 
+
+	m_alloweditclients = aStruct->AllowEditClients;
+    m_ftTimeout = aStruct->FileTransferTimeout;
+    m_keepAliveInterval = aStruct->KeepAliveInterval;
+    m_socketKeepAliveTimeout = aStruct->SocketKeepAliveTimeout;
+
+	m_server->SetDisableTrayIcon(aStruct->DisableTrayIcon);
+	m_pref_RequireMSLogon = aStruct->MSLogonRequired;
+	m_pref_NewMSLogon = aStruct->NewMSLogon;
+
+	m_pref_UseDSMPlugin = aStruct->UseDSMPlugin;
+	m_server->SetConnectPriority(aStruct->ConnectPriority);
+	strncpy_s(m_pref_szDSMPlugin, sizeof(m_pref_szDSMPlugin) - 1, aStruct->DSMPlugin, _TRUNCATE);
+	strncpy_s(m_pref_DSMPluginConfig, sizeof(m_pref_DSMPluginConfig) - 1, aStruct->DSMPluginConfig, _TRUNCATE);
+
+	//user settings:
+	m_pref_EnableFileTransfer = aStruct->FileTransferEnabled;
+	m_pref_FTUserImpersonation = aStruct->FTUserImpersonation;
+	m_pref_EnableBlankMonitor = aStruct->BlankMonitorEnabled;
+	m_pref_BlankInputsOnly = aStruct->BlankInputsOnly;
+	m_pref_DefaultScale = aStruct->DefaultScale;
+	m_pref_CaptureAlphaBlending = aStruct->CaptureAlphaBlending;
+	m_pref_BlackAlphaBlending = aStruct->BlackAlphaBlending;
+
+	m_pref_UseDSMPlugin = aStruct->UseDSMPlugin;
+	//m_pref_szDSMPlugin = aStruct->DSMPlugin;
+    memcpy(m_pref_szDSMPlugin, aStruct->DSMPlugin, MAXPATH);
+	//m_pref_DSMPluginConfig = aStruct->DSMPluginConfig;
+    memcpy(m_pref_DSMPluginConfig, aStruct->DSMPluginConfig, MAXPATH);
+
+	m_pref_Primary = aStruct->primary;
+	m_pref_Secondary = aStruct->secondary;
+
+	// Connection prefs
+	m_pref_SockConnect=aStruct->SocketConnect;
+	m_pref_HTTPConnect=aStruct->HTTPConnect;
+	m_pref_XDMCPConnect=aStruct->XDMCPConnect;
+	m_pref_AutoPortSelect=aStruct->AutoPortSelect;
+	m_pref_PortNumber=aStruct->PortNumber;
+	m_pref_HttpPortNumber=aStruct->HTTPPortNumber;
+	m_pref_IdleTimeout=aStruct->IdleTimeout;
+
+	m_pref_RemoveWallpaper=aStruct->RemoveWallpaper;
+	m_pref_RemoveEffects=aStruct->RemoveEffects;
+	m_pref_RemoveFontSmoothing=aStruct->RemoveFontSmoothing;
+	m_pref_RemoveAero=aStruct->RemoveAero;
+
+	// Connection querying settings
+	m_pref_QuerySetting=aStruct->QuerySetting;
+	m_server->SetQuerySetting(m_pref_QuerySetting);
+	m_pref_QueryTimeout=aStruct->QueryTimeout;
+	m_server->SetQueryTimeout(m_pref_QueryTimeout);
+	m_pref_QueryAccept=aStruct->QueryAccept;
+	m_server->SetQueryAccept(m_pref_QueryAccept);
+
+	// marscha@2006 - Is AcceptDialog required even if no user is logged on
+	m_pref_QueryIfNoLogon = aStruct->QueryIfNoLogon;
+	m_server->SetQueryIfNoLogon(m_pref_QueryIfNoLogon);
+
+	// Load the password
+	vncPasswd::FromText crypt(aStruct->password);
+    memcpy(m_pref_passwd, crypt, MAXPWLEN);
+	//_this->m_server->SetPassword(crypt);
+	vncPasswd::FromText crypt2(aStruct->password2); //PGM
+    memcpy(m_pref_passwd2, crypt2, MAXPWLEN);
+	//_this->m_server->SetPassword2(crypt2); //PGM
+
+	// Remote access prefs
+	m_pref_EnableRemoteInputs=aStruct->InputsEnabled;
+	m_pref_LockSettings=aStruct->LockSetting;
+	m_pref_DisableLocalInputs=aStruct->LocalInputsDisabled;
+	m_pref_EnableJapInput=aStruct->EnableJapInput;
+	m_pref_clearconsole=aStruct->clearconsole;
+	G_SENDBUFFER=aStruct->sendbuffer;
 }

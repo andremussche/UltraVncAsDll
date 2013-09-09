@@ -64,6 +64,9 @@ public:
 	void SaveToIniFile();
 	void SaveUserPrefsPollToIniFile();
 
+	// Making the loaded user prefs active
+	void ApplyUserPrefs();
+
 	// Implementation
 protected:
 	// The server object to which this properties object is attached.
@@ -91,7 +94,7 @@ protected:
 	void LoadSingleWindowName(HKEY key, char *buffer);
 
 	// Making the loaded user prefs active
-	void ApplyUserPrefs();
+	//void ApplyUserPrefs();
 	
 	BOOL m_returncode_valid;
 	BOOL m_dlgvisible;

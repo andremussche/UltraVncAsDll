@@ -702,8 +702,6 @@ HWND ClientConnection::GTGBS_ShowConnectWindow()
 
 void ClientConnection::CreateButtons(BOOL mini,BOOL ultra)
 {
-	vnclog.Print(3, _T("CreateButtons\n"));
-
 	if (ultra)
 	{
 		int nr_buttons = 14;
@@ -1108,8 +1106,6 @@ void ClientConnection::RebuildToolbar(HWND hwnd)
 
 void ClientConnection::GTGBS_CreateToolbar()
 {
-	vnclog.Print(3, _T("GTGBS_CreateToolbar\n"));
-
 	RECT clr;
 	WNDCLASS wndclass;
 
@@ -1236,8 +1232,6 @@ void ClientConnection::GTGBS_CreateToolbar()
 
 void ClientConnection::CreateDisplay()
 {
-	vnclog.Print(3, _T("CreateDisplay\n"),
-
 #ifdef _WIN32_WCE
 	//const DWORD winstyle = WS_VSCROLL | WS_HSCROLL | WS_CAPTION | WS_SYSMENU;
 	const DWORD winstyle =  WS_CHILD;
@@ -2999,6 +2993,25 @@ void ClientConnection::ReadServerInit()
 	SizeWindow();
 }
 
+//Extra stuff for VncViewer as Dll
+/****************************************************************/
+//By: André Mussche, andre.mussche@gmail.com
+//Note: just some quick and dirty stuff to get it working :)
+
+#define DLLEXPORT   __declspec( dllexport ) 
+
+typedef void (*MyFuncPtr)(HWND /*aConnectionWindow*/);				  //definition of our function pointer "MyFuncPtr"	
+MyFuncPtr WindowSizedCallback = NULL;	  //variable to a function pointer
+
+extern "C" DLLEXPORT /*export without name mangling*/
+int VncViewerDll_SetWindowSizedCallback( MyFuncPtr aCallback /*param with pointer to function*/)
+{
+	WindowSizedCallback = aCallback;  //save function pointer in global var
+	return 0; //OK
+}
+/****************************************************************/
+
+
 void ClientConnection::SizeWindow()
 {
 	// Find how large the desktop work area is
@@ -3106,23 +3119,32 @@ void ClientConnection::SizeWindow()
 		m_winheight = min(m_fullwinheight, workheight);
 	int aa=GetSystemMetrics(SM_CXBORDER)+GetSystemMetrics(SM_CXHSCROLL);
 	int bb=tdc.monarray[1].wr-tdc.monarray[1].wl+aa;
+
+	/*
 	if (m_opts.m_selected_screen==0 && (m_fullwinwidth <= bb )) //fit on primary
 		// -20 for border
 	{
 		SetWindowPos(m_hwndMain, HWND_TOP,
 				tdc.monarray[1].wl + ((tdc.monarray[1].wr-tdc.monarray[1].wl)-m_winwidth) / 2,
 				tdc.monarray[1].wt + ((tdc.monarray[1].wb-tdc.monarray[1].wt)-m_winheight) / 2,
-				m_winwidth, m_winheight, SWP_SHOWWINDOW);
+				m_winwidth, m_winheight, 
+				SWP_ASYNCWINDOWPOS);  //no auto show in dll, host must do that
+				//SWP_SHOWWINDOW);
 	}
 	else
+	*/
 	{
-	SetWindowPos(m_hwndMain, HWND_TOP,
-				workrect.left + (workwidth-m_winwidth) / 2,
-				workrect.top + (workheight-m_winheight) / 2,
-				m_winwidth, m_winheight, SWP_SHOWWINDOW);
+//	SetWindowPos(m_hwndMain, HWND_TOP,
+		MoveWindow(m_hwndMain,
+				0, //workrect.left + (workwidth-m_winwidth) / 2,
+				0, //workrect.top + (workheight-m_winheight) / 2,
+				m_winwidth, m_winheight, 
+				TRUE);
+				//SWP_ASYNCWINDOWPOS);  //no auto show in dll, host must do that
+				//SWP_SHOWWINDOW);
 	}
 
-	SetForegroundWindow(m_hwndMain);
+	//SetForegroundWindow(m_hwndMain);
 
 	if (m_opts.m_ShowToolbar)
 		MoveWindow(m_hwndTBwin, 0, 0, workwidth, m_TBr.bottom - m_TBr.top, TRUE);
@@ -3139,6 +3161,10 @@ void ClientConnection::SizeWindow()
 		ShowWindow(m_hwndTBwin, SW_SHOW);
 	else
 		ShowWindow(m_hwndTB, SW_HIDE);
+
+	//execute client callback function (if set)
+	if (WindowSizedCallback)
+		WindowSizedCallback(m_hwndMain);
 }
 
 // We keep a local copy of the whole screen.  This is not strictly necessary
@@ -6207,8 +6233,6 @@ void ClientConnection::GTGBS_ScrollToolbar(int dx, int dy)
 
 void ClientConnection::GTGBS_CreateDisplay()
 {
-	vnclog.Print(3, _T("GTGBS_CreateDisplay\n"),
-
 	// Das eigendliche HauptFenster erstellen,
 	// welches das VNC-Fenster und die Toolbar enthält
 	WNDCLASS wndclass;
@@ -6821,7 +6845,7 @@ LRESULT CALLBACK ClientConnection::WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, 
 						if (MessageBox(hwnd, sz_L75,
 							sz_L76,
 							MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2) == IDYES)
-							PostQuitMessage(0);
+							//PostQuitMessage(0);
 						return 0;
 
 						// Modif sf@2002 - FileTransfer

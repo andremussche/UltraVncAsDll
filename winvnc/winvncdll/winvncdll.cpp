@@ -193,9 +193,7 @@ Myinit(HINSTANCE hInstance)
 #pragma comment(lib, "C:/DATA/crash/crashrpt/lib/crashrpt")
 #endif
 
-// WinMain parses the command line and either calls the main App
-// routine or, under NT, the main service routine.
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int iCmdShow)
+int WINAPI WinMain_(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int iCmdShow)
 {
 	// make vnc last service to stop
 	SetProcessShutdownParameters(0x100,false);
@@ -998,6 +996,9 @@ void KillSDTimer()
 // Under NT, WinVNC can also run as a service.  The WinVNCServerMain routine,
 // defined in the vncService header, is used instead when running as a service.
 
+//extra variables:
+vncServer *m_server;
+
 int WinVNCAppMain()
 {
 	SetOSVersion();
@@ -1023,15 +1024,16 @@ int WinVNCAppMain()
 
 	//vnclog.Print(LL_INTINFO, VNCLOG("***** DBG - Previous instance checked - Trying to create server\n"));
 	// CREATE SERVER
-	vncServer server;
+	//vncServer server;
+	m_server = new vncServer();
 
 	// Set the name and port number
-	server.SetName(szAppName);
+	m_server->SetName(szAppName);
 	vnclog.Print(LL_STATE, VNCLOG("server created ok\n"));
 	///uninstall driver before cont
 
 	// sf@2007 - Set Application0 special mode
-	server.RunningFromExternalService(fRunningFromExternalService);
+	m_server->RunningFromExternalService(fRunningFromExternalService);
 
 	// sf@2007 - New impersonation thread stuff for tray icon & menu
 	// Subscribe to shutdown event
@@ -1049,7 +1051,7 @@ int WinVNCAppMain()
 
 		HANDLE threadHandle;
 		DWORD dwTId;
-		threadHandle = CreateThread(NULL, 0, imp_desktop_thread, &server, 0, &dwTId);
+		threadHandle = CreateThread(NULL, 0, imp_desktop_thread, m_server, 0, &dwTId);
 
 		if (threadHandle)
 		{
@@ -1074,3 +1076,242 @@ int WinVNCAppMain()
 	}
 	return 1;
 };
+
+//Extra stuff added for DLL support
+//By: André Mussche, andre.mussche@gmail.com
+//Note: just some quick and dirty stuff to get it working :)
+
+#define DLLEXPORT   __declspec( dllexport ) 
+
+//extra variables:
+//vncServer *m_server;
+vncProperties	m_properties;
+vncPropertiesPoll	m_propertiesPoll;
+bool m_WinVNCDll_Initialized = false;
+
+extern "C" DLLEXPORT /*export without name mangling*/
+int WinVNCDll_Init(HINSTANCE hInstance)
+{
+	// handle dpi on aero
+	HMODULE hUser32 = LoadLibrary(_T("user32.dll"));
+	typedef BOOL (*SetProcessDPIAwareFunc)();
+	SetProcessDPIAwareFunc setDPIAware = (SetProcessDPIAwareFunc)GetProcAddress(hUser32, "SetProcessDPIAware");
+	if (setDPIAware) setDPIAware();
+	FreeLibrary(hUser32);
+
+#ifdef IPP
+	InitIpp();
+#endif
+	bool Injected_autoreconnect=false;
+	SPECIAL_SC_EXIT=false;
+	SPECIAL_SC_PROMPT=false;
+	SetOSVersion();
+	setbuf(stderr, 0);
+
+	// [v1.0.2-jp1 fix] Load resouce from dll
+	hInstResDLL = NULL;
+
+	 //limit the vnclang.dll searchpath to avoid
+	char szCurrentDir[MAX_PATH];
+	char szCurrentDir_vnclangdll[MAX_PATH];
+	if (GetModuleFileName(NULL, szCurrentDir, MAX_PATH))
+	{
+		char* p = strrchr(szCurrentDir, '\\');
+		*p = '\0';
+	}
+	strcpy (szCurrentDir_vnclangdll,szCurrentDir);
+	strcat (szCurrentDir_vnclangdll,"\\");
+	strcat (szCurrentDir_vnclangdll,"vnclang_server.dll");
+
+	hInstResDLL = LoadLibrary(szCurrentDir_vnclangdll);
+
+	if (hInstResDLL == NULL)
+	{
+		hInstResDLL = hInstance;
+	}
+//	RegisterLinkLabel(hInstResDLL);
+
+    //Load all messages from ressource file
+    Load_Localization(hInstResDLL) ;
+
+	char WORKDIR[MAX_PATH];
+	if (GetModuleFileName(NULL, WORKDIR, MAX_PATH))
+		{
+		char* p = strrchr(WORKDIR, '\\');
+		if (p == NULL) return 1;
+		*p = '\0';
+		}
+    char progname[MAX_PATH];
+    strncpy(progname, WORKDIR, sizeof progname);
+    progname[MAX_PATH - 1] = 0;
+	//strcat(WORKDIR,"\\");
+	//strcat(WORKDIR,"WinVNC.log");
+
+	vnclog.SetFile();
+//	vnclog.SetMode(2);
+//	vnclog.SetLevel(10);
+
+#ifdef _DEBUG
+	{
+		// Get current flag
+		int tmpFlag = _CrtSetDbgFlag( _CRTDBG_REPORT_FLAG );
+		// Turn on leak-checking bit
+		tmpFlag |= _CRTDBG_LEAK_CHECK_DF;
+		// Set flag to the new value
+		_CrtSetDbgFlag( tmpFlag );
+	}
+#endif
+
+	// Save the application instance and main thread id
+	hAppInstance = hInstance;
+	mainthreadId = GetCurrentThreadId();
+
+	// Initialise the VSocket system
+	VSocketSystem *socksys = new VSocketSystem();
+	if (!socksys->Initialised())
+	{
+		MessageBoxSecure(NULL, sz_ID_FAILED_INIT, szAppName, MB_OK);
+		return 2;
+	}
+
+	//OK
+	m_WinVNCDll_Initialized = true;
+	return 0;
+}
+
+extern "C" DLLEXPORT /*export without name mangling*/
+int WinVNCDll_CreateServer()
+{
+	if (!m_WinVNCDll_Initialized) {	return -1; };
+
+	SetOSVersion();
+	vnclog.Print(LL_INTINFO, VNCLOG("***** DBG - WinVNCDllCreateServer\n"));
+
+	// CREATE SERVER
+	//vncServer server = new vncServer();
+	//m_server = &server; 
+	m_server = new vncServer();
+
+	// Set the name and port number
+	m_server->SetName(szAppName);
+	vnclog.Print(LL_STATE, VNCLOG("server created ok\n"));
+	///uninstall driver before cont
+
+	// sf@2007 - Set Application0 special mode
+	m_server->RunningFromExternalService(fRunningFromExternalService);
+
+	// Initialise the properties object
+	if (!m_properties.Init(m_server))
+	{
+		return 1;
+	}
+	if (!m_propertiesPoll.Init(m_server))
+	{
+		return 2;
+	}
+
+	return 0; //OK
+}
+
+extern "C" DLLEXPORT /*export without name mangling*/
+int WinVNCDll_GetProperties(vncPropertiesStruct * aStruct)
+{	
+	if (!m_server) { return -1; };
+	if (!m_WinVNCDll_Initialized) { return -1; };
+
+	m_properties.FillPropertiesStruct(aStruct);
+	return 0; //OK
+}
+
+extern "C" DLLEXPORT /*export without name mangling*/
+int WinVNCDll_SetProperties(vncPropertiesStruct * aStruct)
+{	
+	if (!m_server) { return -1; };
+	if (!m_WinVNCDll_Initialized) { return -1; };
+
+	m_properties.ReadFromPropertiesStruct(aStruct);
+	m_properties.ApplyUserPrefs();
+
+	//m_properties.Save();
+	m_properties.SaveToIniFile();
+	//m_server.
+	//OutputDebugString(line);
+
+	return 0; //OK
+}
+
+extern "C" DLLEXPORT /*export without name mangling*/
+int WinVNCDll_GetPollProperties()
+{
+	if (!m_server) { return -1; };
+	if (!m_WinVNCDll_Initialized) { return -1; };
+
+	//m_propertiesPoll;
+	return -1;  //todo
+}
+
+HANDLE threadHandle;
+DWORD dwTId;
+
+extern "C" DLLEXPORT /*export without name mangling*/
+int WinVNCDll_RunServer()
+{
+	if (!m_server) { return -1; };
+	if (!m_WinVNCDll_Initialized) { return -1; };
+
+	//by applying the server gets started?
+	m_properties.ApplyUserPrefs();
+	m_propertiesPoll.ApplyUserPrefs();
+	//start menu (for disabling wallpaper, effects etc
+	//vncMenu *menu = new vncMenu(m_server);
+
+	m_server->SetLoopbackOk(true);
+
+	//create thread (for handling connection settings per viewer etc)
+	threadHandle = CreateThread(NULL, 0, imp_desktop_thread, m_server, 0, &dwTId);
+
+	//OK
+	return 0;
+}
+
+extern "C" DLLEXPORT /*export without name mangling*/
+int WinVNCDll_DestroyServer()
+{
+	if (!m_server) { return -1; };
+	if (!m_WinVNCDll_Initialized) { return -1; };
+
+	fShutdownOrdered = true;
+	m_server->ShutdownServer();
+
+	if (threadHandle)
+	{
+		WaitForSingleObject( threadHandle, INFINITE );
+		CloseHandle(threadHandle);
+	}
+	vnclog.Print(LL_STATE, VNCLOG("################## Closing Imp Thread\n"));
+
+	delete m_server;
+	m_server = 0;
+
+	return 0;  //OK
+}
+
+//to test the dll stuff
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int iCmdShow)
+{
+	//WinVNCAppMain();
+
+	WinVNCDll_Init(hInstance);
+	WinVNCDll_CreateServer();
+
+	vncPropertiesStruct prop;
+	WinVNCDll_GetProperties(&prop);
+	prop.RemoveWallpaper = 1;
+	WinVNCDll_SetProperties(&prop);
+
+	WinVNCDll_RunServer();
+	Sleep(1000 * 1000);
+	WinVNCDll_DestroyServer();
+
+	Sleep(100 * 1000);
+}

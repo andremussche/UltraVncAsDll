@@ -85,6 +85,7 @@
     <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Program Files %28x86%29\Microsoft DirectX SDK %28June 2010%29\Lib\x64;$(LibraryPath)</LibraryPath>
     <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Program Files %28x86%29\Microsoft DirectX SDK %28June 2010%29\Include;$(IncludePath)</IncludePath>
     <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Program Files %28x86%29\Microsoft DirectX SDK %28June 2010%29\Lib\x64;$(LibraryPath)</LibraryPath>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.\directx\;.\omnithread\;..\..\Microsoft DirectX 9.0 SDK (August 2005)\Include\;..\..\Microsoft Platform SDK for Windows Server 2003 R2\Include\mfc;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Midl>
@@ -767,6 +768,7 @@
     <ClInclude Include="Daemon.h" />
     <ClInclude Include="..\rfb\dh.h" />
     <ClInclude Include="..\DSMPlugin\DSMPlugin.h" />
+    <ClInclude Include="directx\d3dx9.h" />
     <ClInclude Include="directx\directxviewer.h" />
     <ClInclude Include="display.h" />
     <ClInclude Include="Exception.h" />

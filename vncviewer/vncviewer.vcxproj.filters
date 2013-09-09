@@ -439,6 +439,9 @@
     <ClInclude Include="display.h">
       <Filter>sources</Filter>
     </ClInclude>
+    <ClInclude Include="directx\d3dx9.h">
+      <Filter>headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="res\vncviewer.rc">

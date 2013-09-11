@@ -45,7 +45,7 @@ var
 implementation
 
 uses
-  VncServerAsDll, VncViewerAsDll;
+  VncServerAsDll, VncViewerAsDll, JclDebug, JclHookExcept, StrUtils, IOUtils;
 
 {$R *.dfm}
 
@@ -77,6 +77,7 @@ begin
 
   //make new VNC client connection
   viewer := TVncViewerAsDll.VncViewerDll_NewConnection('localhost', 5900);
+//  viewer := TVncViewerAsDll.VncViewerDll_NewConnection('pc-9523', 5900);
   fr.EmbedViewer(viewer);
 end;
 
@@ -168,17 +169,16 @@ begin
   props.password      := 'test';
   props.password_view := 'guest';
 
-  props.RemoveWallpaper := 1;
-  props.RemoveEffects := 1;
-  props.RemoveFontSmoothing := 1;
-  props.RemoveAero := 1;
-
-  props.CaptureAlphaBlending := 0;
+  props.RemoveWallpaper := 0;
+  props.RemoveEffects := 0;
+  props.RemoveFontSmoothing := 0;
+  props.RemoveAero := 0;
+  props.CaptureAlphaBlending := 1;
 
   props.DebugLevel := 10;
   props.DebugMode  := 1;
   props.AllowLoopback := 1;
-  props.LoopbackOnly := 1;
+//  props.LoopbackOnly := 1;
 
   TVncServerAsDll.WinVNCDll_SetProperties(@props);
   TVncServerAsDll.WinVNCDll_GetProperties(@props);
@@ -203,5 +203,111 @@ begin
   FViewers.Free;
   inherited;
 end;
+
+procedure WriteStackListToFile(const aError: Exception; const AStackTrace: TJclStackInfoList; const aErrorText: string);
+var
+  str:TStrings;
+begin
+  str    := TStringList.create;
+  try
+    if AStackTrace <> nil then
+      AStackTrace.AddToStrings(Str,True,False,True);
+    TFile.WriteAllText(
+      'Exception_' + FormatDateTime('yyyymmdd-hhnnsszzz', Now) + '.log',
+      aErrorText + str.Text);
+  finally
+    str.Free;
+  end;
+end;
+
+procedure WriteAnyException(ExceptObj: Exception; ExceptAddr: Pointer; OSException: Boolean);
+var
+  sError:string;
+  lstack: TJclStackInfoList;
+  iTID: Cardinal;
+begin
+  if ExceptObj = nil then
+    sError := 'Unknown/Empty exception'
+  else
+    sError := Format('%s at adress %p: %s',
+                    [ExceptObj.ClassName, ExceptAddr,
+                     ExceptObj.Message]);
+
+  //if exception in our own code?
+  if OSException then
+    sError := 'OS ' + sError;
+  //if GetCurrentProcessId <> FMainProcessId then
+  //  sError := format('External process (%d) %s',[GetCurrentProcessId, sError]);
+
+  iTID := GetCurrentThreadId;
+  if GetCurrentThreadId = MainThreadID then
+    sError := format('%s' + #13 + '{occured in main thread}',[sError])
+  else
+  begin
+    sError := format('%s' + #13 + '{occured in sub thread(TID=%d, class=%s, name=%s, created=%s, parent=%s)}',
+                     [sError, iTID,
+                      JclDebugThreadList.ThreadClassNames[iTID],
+                      JclDebugThreadList.ThreadNames[iTID],
+                      DateTimeToStr(JclDebugThreadList.ThreadCreationTime[iTID]),
+                      IfThen(JclDebugThreadList.ThreadParentIDs[iTID] <> iTID,
+                             JclDebugThreadList.ThreadInfos[ JclDebugThreadList.ThreadParentIDs[iTID] ],
+                             '')
+                     ]);
+  end;
+  sError := 'HOOK: ' + sError;
+
+  //WriteMemoryDump(0)
+  //if ExceptObj is ETestFailure then
+  //  lStack := jclDebug.JclCreateStackList(False, 0, nil)
+  //else
+    lStack := jclDebug.JclLastExceptStackList;
+  try
+    if (lstack = nil) or (lstack.Count < 3) then
+    begin
+      lstack.Free;
+      lStack := TJclStackInfoList.Create(True, 0, nil);
+    end;
+
+    sError := sError + #13#13'Stack:'#13;
+    {$IOCHECKS OFF}
+    WriteStackListToFile(ExceptObj, lStack, sError);
+    {$IOCHECKS ON}
+  finally
+    lstack.Free;
+  end;
+end;
+
+procedure AnyExceptionNotify(ExceptObj: TObject; ExceptAddr: Pointer; OSException: Boolean);
+begin
+  try
+    //terminated? -> do not quit, always write exception logs!
+    //if Application.Terminated then exit;
+
+    //delphi thread name, ignore
+    if (ExceptObj is EExternalexception) and
+       {$WARN SYMBOL_PLATFORM OFF}
+       (EExternalexception(ExceptObj).Exceptionrecord^.ExceptionCode = 1080890248) then
+    begin
+      Exit;
+    end;
+    //if ExceptObj is EIdSilentException then exit;    //EIdClosedSocket
+    //if ExceptObj is EIdSocketError then exit;
+    //if (ExceptObj is EAbort) and not (ExceptObj is ETestFailure) then exit;
+    if not (ExceptObj is Exception) then Exit;
+
+    WriteAnyException(ExceptObj as Exception, ExceptAddr, OSException);
+  except
+    //eat exceptions during exception handling...
+  end;
+end;
+
+initialization
+  JclHookThreads;
+  //{$IFDEF ShowAllExceptions}
+  JclHookExceptions;
+  // Assign notification procedure for hooked RaiseException API call. This
+  // allows being notified of any exception
+  JclAddExceptNotifier(AnyExceptionNotify);
+  //{$ENDIF}
 
 end.

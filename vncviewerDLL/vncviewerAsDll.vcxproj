@@ -21,6 +21,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{515A99EC-9BC3-4214-9806-070D724F0D58}</ProjectGuid>
     <RootNamespace>vncviewer</RootNamespace>
+    <ProjectName>vncviewerdll</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
@@ -87,6 +88,9 @@
     <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Program Files %28x86%29\Microsoft DirectX SDK %28June 2010%29\Lib\x64;$(LibraryPath)</LibraryPath>
     <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.\directx\;.\omnithread\;..\..\Microsoft DirectX 9.0 SDK (August 2005)\Include\;..\..\Microsoft Platform SDK for Windows Server 2003 R2\Include\mfc;$(IncludePath)</IncludePath>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.dll</TargetExt>
+    <PostBuildEventUseInBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</PostBuildEventUseInBuild>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">vncviewer</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">vncviewer</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Midl>

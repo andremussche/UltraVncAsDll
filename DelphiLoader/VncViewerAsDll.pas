@@ -191,7 +191,9 @@ end;
 
 class function TVncViewerAsDll.Load: Boolean;
 begin
-  FDll   := LoadLibrary(PChar('VncViewerAsDll.dll'));
+  FDll   := LoadLibrary(PChar('vncviewer.dll'));   //new filename
+  if FDll <= 0 then
+    FDll   := LoadLibrary(PChar('VncViewerAsDll.dll'));
   Result := (FDll > 0);
   if not Result then Exit;
 

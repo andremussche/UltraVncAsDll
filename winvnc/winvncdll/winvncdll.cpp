@@ -1233,9 +1233,7 @@ int WinVNCDll_SetProperties(vncPropertiesStruct * aStruct)
 	m_properties.ApplyUserPrefs();
 
 	//m_properties.Save();
-	m_properties.SaveToIniFile();
-	//m_server.
-	//OutputDebugString(line);
+	m_properties.SaveToIniFile();  //this is needed, because ini file is read for every user/connection?
 
 	return 0; //OK
 }
@@ -1246,7 +1244,6 @@ int WinVNCDll_GetPollProperties()
 	if (!m_server) { return -1; };
 	if (!m_WinVNCDll_Initialized) { return -1; };
 
-	//m_propertiesPoll;
 	return -1;  //todo
 }
 
@@ -1262,11 +1259,7 @@ int WinVNCDll_RunServer()
 	//by applying the server gets started?
 	m_properties.ApplyUserPrefs();
 	m_propertiesPoll.ApplyUserPrefs();
-	//start menu (for disabling wallpaper, effects etc
-	//vncMenu *menu = new vncMenu(m_server);
-
-	m_server->SetLoopbackOk(true);
-
+	
 	//create thread (for handling connection settings per viewer etc)
 	threadHandle = CreateThread(NULL, 0, imp_desktop_thread, m_server, 0, &dwTId);
 

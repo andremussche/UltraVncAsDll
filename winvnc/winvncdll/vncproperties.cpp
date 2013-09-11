@@ -1887,6 +1887,7 @@ void
 vncProperties::LoadUserPrefs(HKEY appkey)
 {
 	// LOAD USER PREFS FROM THE SELECTED KEY
+	vnclog.Print(LL_INTINFO, VNCLOG("LoadUserPrefs\n"));
 
 	// Modif sf@2002
 	m_pref_EnableFileTransfer = LoadInt(appkey, "FileTransferEnabled", m_pref_EnableFileTransfer);
@@ -1947,6 +1948,7 @@ void
 vncProperties::ApplyUserPrefs()
 {
 	// APPLY THE CACHED PREFERENCES TO THE SERVER
+	vnclog.Print(LL_INTINFO, VNCLOG("ApplyUserPrefs\n"));
 
 	// Modif sf@2002
 	m_server->EnableFileTransfer(m_pref_EnableFileTransfer);
@@ -2248,6 +2250,8 @@ vncProperties::SaveUserPrefs(HKEY appkey)
 
 void vncProperties::LoadFromIniFile()
 {
+	vnclog.Print(LL_INTINFO, VNCLOG("LoadFromIniFile\n"));
+
 	//if (m_dlgvisible)
 	//{
 	//	vnclog.Print(LL_INTWARN, VNCLOG("service helper invoked while Properties panel displayed\n"));
@@ -2396,6 +2400,8 @@ void vncProperties::LoadFromIniFile()
 
 void vncProperties::LoadUserPrefsFromIniFile()
 {
+	vnclog.Print(LL_INTINFO, VNCLOG("LoadUserPrefsFromIniFile\n"));
+
 	// Modif sf@2002
 	m_pref_EnableFileTransfer = myIniFile.ReadInt("admin", "FileTransferEnabled", m_pref_EnableFileTransfer);
 	m_pref_FTUserImpersonation = myIniFile.ReadInt("admin", "FTUserImpersonation", m_pref_FTUserImpersonation); // sf@2005
@@ -2596,6 +2602,8 @@ void vncProperties::ReloadDynamicSettings()
 
 void vncProperties::FillPropertiesStruct(vncPropertiesStruct * aStruct)
 {
+	vnclog.Print(LL_INTINFO, VNCLOG("FillPropertiesStruct\n"));
+	
 	aStruct->DebugMode = vnclog.GetMode();
 	aStruct->Avilog = vnclog.GetVideo();
 	aStruct->path = vnclog.GetPath();
@@ -2683,6 +2691,8 @@ void vncProperties::FillPropertiesStruct(vncPropertiesStruct * aStruct)
 
 void vncProperties::ReadFromPropertiesStruct(vncPropertiesStruct * aStruct)
 {
+	vnclog.Print(LL_INTINFO, VNCLOG("ReadFromPropertiesStruct\n"));
+
 	vnclog.SetMode(aStruct->DebugMode);
 	vnclog.SetVideo(aStruct->Avilog);
 	vnclog.SetPath(aStruct->path);

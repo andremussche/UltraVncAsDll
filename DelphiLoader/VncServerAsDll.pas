@@ -140,7 +140,9 @@ end;
 
 class function TVncServerAsDll.Load: Boolean;
 begin
-  FDll   := LoadLibrary(PChar('winvncdll.dll'));
+  FDll   := LoadLibrary(PChar('vncserver.dll'));   //new filename
+  if FDll <= 0 then
+    FDll   := LoadLibrary(PChar('winvncdll.dll')); //old filename
   Result := (FDll > 0);
   if not Result then Exit;
 

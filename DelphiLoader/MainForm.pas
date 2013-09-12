@@ -155,6 +155,7 @@ end;
 procedure TForm1.actStartExecute(Sender: TObject);
 var
   props: TvncPropertiesStruct;
+  pollprops: TvncPropertiesPollStruct;
 begin
   //create
   TVncServerAsDll.WinVNCDll_CreateServer;
@@ -181,7 +182,13 @@ begin
 //  props.LoopbackOnly := 1;
 
   TVncServerAsDll.WinVNCDll_SetProperties(@props);
-  TVncServerAsDll.WinVNCDll_GetProperties(@props);
+
+  //setup
+  FillChar(pollprops, SizeOf(pollprops), 0);
+  TVncServerAsDll.WinVNCDll_GetPollProperties(@pollprops);
+  pollprops.EnableDriver := 0;  //no black screen flickering!
+  pollprops.EnableHook   := 1;  //fast, using vnchooks.dll but no load flickering
+  TVncServerAsDll.WinVNCDll_SetPollProperties(@pollprops);
 
   //run!
   TVncServerAsDll.WinVNCDll_RunServer;

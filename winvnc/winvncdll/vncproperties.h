@@ -204,6 +204,8 @@ struct vncPropertiesStruct
 	*/
 };
 
+
+
 // The vncProperties class itself
 class vncProperties
 {

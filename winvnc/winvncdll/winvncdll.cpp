@@ -1239,12 +1239,27 @@ int WinVNCDll_SetProperties(vncPropertiesStruct * aStruct)
 }
 
 extern "C" DLLEXPORT /*export without name mangling*/
-int WinVNCDll_GetPollProperties()
+int WinVNCDll_GetPollProperties(vncPropertiesPollStruct * aStruct)
 {
 	if (!m_server) { return -1; };
 	if (!m_WinVNCDll_Initialized) { return -1; };
 
-	return -1;  //todo
+	m_propertiesPoll.FillPropertiesStruct(aStruct);
+
+	return 0;  
+}
+
+extern "C" DLLEXPORT /*export without name mangling*/
+int WinVNCDll_SetPollProperties(vncPropertiesPollStruct * aStruct)
+{
+	if (!m_server) { return -1; };
+	if (!m_WinVNCDll_Initialized) { return -1; };
+
+	m_propertiesPoll.ReadFromPropertiesStruct(aStruct);
+	m_propertiesPoll.ApplyUserPrefs();
+	m_propertiesPoll.SaveToIniFile();  //this is needed, because ini file is read for every user/connection?
+
+	return 0;  
 }
 
 HANDLE threadHandle;
@@ -1299,12 +1314,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine,
 
 	vncPropertiesStruct prop;
 	WinVNCDll_GetProperties(&prop);
-	prop.RemoveWallpaper = 1;
+	//prop.RemoveWallpaper = 1;
 	WinVNCDll_SetProperties(&prop);
 
 	WinVNCDll_RunServer();
 	Sleep(1000 * 1000);
 	WinVNCDll_DestroyServer();
 
-	Sleep(100 * 1000);
+	//Sleep(100 * 1000);
 }

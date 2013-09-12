@@ -31,10 +31,50 @@ class vncPropertiesPoll;
 #include "vncserver.h"
 #include "inifile.h"
 #include <userenv.h>
+
+struct vncPropertiesPollStruct
+{
+	int TurboMode;
+	int PollUnderCursor;
+	int PollForeground;
+	int PollFullScreen;
+	int OnlyPollConsole;
+	int OnlyPollOnEvent;
+	int MaxCpu;
+	int EnableDriver;
+	int EnableHook;
+	int EnableVirtual;
+	int SingleWindow;
+	char SingleWindowName[32];
+
+	/*
+		m_pref_TurboMode = LoadInt(appkey, "TurboMode", m_pref_TurboMode);
+	// Polling prefs
+	m_pref_PollUnderCursor=LoadInt(appkey, "PollUnderCursor", m_pref_PollUnderCursor);
+	m_pref_PollForeground=LoadInt(appkey, "PollForeground", m_pref_PollForeground);
+	m_pref_PollFullScreen=LoadInt(appkey, "PollFullScreen", m_pref_PollFullScreen);
+	m_pref_PollConsoleOnly=LoadInt(appkey, "OnlyPollConsole", m_pref_PollConsoleOnly);
+	m_pref_PollOnEventOnly=LoadInt(appkey, "OnlyPollOnEvent", m_pref_PollOnEventOnly);
+	m_pref_MaxCpu=LoadInt(appkey, "MaxCpu", m_pref_MaxCpu);
+	if (m_pref_MaxCpu==0) m_pref_MaxCpu=100;
+	m_pref_Driver=LoadInt(appkey, "EnableDriver", m_pref_Driver);
+	if (m_pref_Driver)m_pref_Driver=CheckVideoDriver(0);
+	m_pref_Hook=LoadInt(appkey, "EnableHook", m_pref_Hook);
+	m_pref_Virtual=LoadInt(appkey, "EnableVirtual", m_pref_Virtual);
+	// [v1.0.2-jp2 fix]
+	m_pref_SingleWindow=LoadInt(appkey, "SingleWindow", m_pref_SingleWindow);
+	LoadSingleWindowName(appkey, m_pref_szSingleWindowName);
+*/
+};
+
+
 // The vncPropertiesPoll class itself
 class vncPropertiesPoll
 {
 public:
+	void FillPropertiesStruct(vncPropertiesPollStruct * aStruct);
+	void ReadFromPropertiesStruct(vncPropertiesPollStruct * aStruct);
+	
 	// Constructor/destructor
 	vncPropertiesPoll();
 	~vncPropertiesPoll();

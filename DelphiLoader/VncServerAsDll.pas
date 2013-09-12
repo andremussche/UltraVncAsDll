@@ -12,6 +12,7 @@ const
 
 type
   PvncPropertiesStruct = ^TvncPropertiesStruct;
+  PvncPropertiesPollStruct = ^TvncPropertiesPollStruct;
 
   TVncServerAsDll = class
   protected
@@ -28,7 +29,8 @@ type
     class function WinVNCDll_CreateServer     (): Integer;
     class function WinVNCDll_GetProperties    (aStruct: PvncPropertiesStruct): Integer;
     class function WinVNCDll_SetProperties    (aStruct: PvncPropertiesStruct): Integer;
-    class function WinVNCDll_GetPollProperties(): Integer;
+    class function WinVNCDll_SetPollProperties(aStruct: PvncPropertiesPollStruct): Integer;
+    class function WinVNCDll_GetPollProperties(aStruct: PvncPropertiesPollStruct): Integer;
     class function WinVNCDll_RunServer        (): Integer;
     class function WinVNCDll_DestroyServer    (): Integer;
   end;
@@ -111,6 +113,21 @@ type
     password_view: array[0..C_MAXPWLEN-1] of AnsiChar;
   end;
 
+  TvncPropertiesPollStruct = record
+    TurboMode: Integer;
+    PollUnderCursor: Integer;
+    PollForeground: Integer;
+    PollFullScreen: Integer;
+    OnlyPollConsole: Integer;
+    OnlyPollOnEvent: Integer;
+    MaxCpu: Integer;
+    EnableDriver: Integer;
+    EnableHook: Integer;
+    EnableVirtual: Integer;
+    SingleWindow: Integer;
+    SingleWindowName: array[0..32-1] of AnsiChar;
+  end;
+
 implementation
 
 type
@@ -119,7 +136,8 @@ type
   TWinVNCDll_CreateServer       = function(): Integer;stdcall;
   TWinVNCDll_GetProperties      = function(aStruct: PvncPropertiesStruct): Integer;stdcall;
   TWinVNCDll_SetProperties      = function(aStruct: PvncPropertiesStruct): Integer;stdcall;
-  TWinVNCDll_GetPollProperties  = function(): Integer;stdcall;
+  TWinVNCDll_GetPollProperties  = function(aStruct: PvncPropertiesPollStruct): Integer;stdcall;
+  TWinVNCDll_SetPollProperties  = function(aStruct: PvncPropertiesPollStruct): Integer;stdcall;
   TWinVNCDll_RunServer          = function(): Integer;stdcall;
   TWinVNCDll_DestroyServer      = function(): Integer;stdcall;
 var
@@ -128,6 +146,7 @@ var
   pWinVNCDll_GetProperties    : TWinVNCDll_GetProperties;
   pWinVNCDll_SetProperties    : TWinVNCDll_SetProperties;
   pWinVNCDll_GetPollProperties: TWinVNCDll_GetPollProperties;
+  pWinVNCDll_SetPollProperties: TWinVNCDll_SetPollProperties;
   pWinVNCDll_RunServer        : TWinVNCDll_RunServer;
   pWinVNCDll_DestroyServer    : TWinVNCDll_DestroyServer;
 
@@ -151,6 +170,7 @@ begin
   pWinVNCDll_GetProperties     := GetProcAddress(FDll, 'WinVNCDll_GetProperties');
   pWinVNCDll_SetProperties     := GetProcAddress(FDll, 'WinVNCDll_SetProperties');
   pWinVNCDll_GetPollProperties := GetProcAddress(FDll, 'WinVNCDll_GetPollProperties');
+  pWinVNCDll_SetPollProperties := GetProcAddress(FDll, 'WinVNCDll_SetPollProperties');
   pWinVNCDll_RunServer         := GetProcAddress(FDll, 'WinVNCDll_RunServer');
   pWinVNCDll_DestroyServer     := GetProcAddress(FDll, 'WinVNCDll_DestroyServer');
 end;
@@ -183,11 +203,11 @@ begin
   Result := pWinVNCDll_CreateServer;
 end;
 
-class function TVncServerAsDll.WinVNCDll_GetPollProperties: Integer;
+class function TVncServerAsDll.WinVNCDll_GetPollProperties(aStruct: PvncPropertiesPollStruct): Integer;
 begin
   Assert(FDll > 0);
   Assert(Assigned(pWinVNCDll_GetPollProperties));
-  Result := pWinVNCDll_GetPollProperties;
+  Result := pWinVNCDll_GetPollProperties(aStruct);
 end;
 
 class function TVncServerAsDll.WinVNCDll_GetProperties(aStruct: PvncPropertiesStruct): Integer;
@@ -196,6 +216,15 @@ begin
   Assert(Assigned(pWinVNCDll_GetProperties));
   //note: properties are default or loaded from "ultravnc.ini"
   Result := pWinVNCDll_GetProperties(aStruct);
+  Assert(Result = 0);
+end;
+
+class function TVncServerAsDll.WinVNCDll_SetPollProperties(
+  aStruct: PvncPropertiesPollStruct): Integer;
+begin
+  Assert(FDll > 0);
+  Assert(Assigned(pWinVNCDll_SetPollProperties));
+  Result := pWinVNCDll_SetPollProperties(aStruct);
   Assert(Result = 0);
 end;
 

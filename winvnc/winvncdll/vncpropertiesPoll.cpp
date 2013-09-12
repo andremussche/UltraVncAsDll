@@ -1037,3 +1037,48 @@ void vncPropertiesPoll::SaveUserPrefsPollToIniFile()
 	myIniFile.WriteString("poll", "SingleWindowName", m_server->GetWindowName());
 	
 }
+
+void vncPropertiesPoll:: FillPropertiesStruct(vncPropertiesPollStruct * aStruct)
+{
+	vnclog.Print(LL_INTINFO, VNCLOG("Poll:FillPropertiesStruct\n"));
+	
+	aStruct->TurboMode = m_pref_TurboMode;
+	// Polling prefs
+	aStruct->PollUnderCursor = m_pref_PollUnderCursor;
+	aStruct->PollForeground = m_pref_PollForeground;
+	aStruct->PollFullScreen = m_pref_PollFullScreen;
+
+	aStruct->OnlyPollConsole = m_pref_PollConsoleOnly;
+	aStruct->OnlyPollOnEvent = m_pref_PollOnEventOnly;
+	aStruct->MaxCpu = m_pref_MaxCpu;
+
+	aStruct->EnableDriver = m_pref_Driver;
+	aStruct->EnableHook = m_pref_Hook;
+	aStruct->EnableVirtual = m_pref_Virtual;
+
+	aStruct->SingleWindow = m_pref_SingleWindow;
+	memcpy(aStruct->SingleWindowName, m_pref_szSingleWindowName, 32);
+}
+
+void vncPropertiesPoll:: ReadFromPropertiesStruct(vncPropertiesPollStruct * aStruct)
+{
+	vnclog.Print(LL_INTINFO, VNCLOG("Poll:FillPropertiesStruct\n"));
+	
+	m_pref_TurboMode = aStruct->TurboMode;
+	// Polling prefs
+	m_pref_PollUnderCursor = aStruct->PollUnderCursor;
+	m_pref_PollForeground = aStruct->PollForeground;
+	m_pref_PollFullScreen = aStruct->PollFullScreen;
+
+	m_pref_PollConsoleOnly = aStruct->OnlyPollConsole;
+	m_pref_PollOnEventOnly = aStruct->OnlyPollOnEvent;
+	m_pref_MaxCpu = aStruct->MaxCpu;
+
+	m_pref_Driver = aStruct->EnableDriver;
+	m_pref_Hook = aStruct->EnableHook;
+	m_pref_Virtual = aStruct->EnableVirtual;
+
+	m_pref_SingleWindow = aStruct->SingleWindow;
+	memcpy(m_pref_szSingleWindowName, aStruct->SingleWindowName, 32);
+}
+

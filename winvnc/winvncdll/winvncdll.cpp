@@ -1304,6 +1304,145 @@ int WinVNCDll_DestroyServer()
 	return 0;  //OK
 }
 
+extern "C" DLLEXPORT /*export without name mangling*/
+int WinVNCDll_AuthClientCount()
+{
+	return m_server->AuthClientCount();
+}
+
+extern "C" DLLEXPORT /*export without name mangling*/
+int WinVNCDll_UnAuthClientCount()
+{
+	return m_server->UnauthClientCount();
+}
+
+extern "C" DLLEXPORT /*export without name mangling*/
+int WinVNCDll_ListenForClient(PSTR szRemoteClient, PSTR szIdCode)
+{
+	// Compatible with both RealVNC and TightVNC methods
+	char hostname[_MAX_PATH];
+	char actualhostname[_MAX_PATH];
+	char idcode[_MAX_PATH];
+	char *portp;
+	int port;
+	bool id;
+
+	// Get the hostname of the VNCviewer
+	strcpy(hostname, szRemoteClient);
+	strcpy(idcode, szIdCode);
+	//GetDlgItemText(hwnd, IDC_HOSTNAME_EDIT, hostname, _MAX_PATH);
+	//GetDlgItemText(hwnd, IDC_IDCODE, idcode, _MAX_PATH);
+	if (strcmp(idcode,"")==0) id=false;
+	else id=true;
+	strcpy(actualhostname, hostname);
+			
+	vnclog.Print(LL_STATE, VNCLOG("WinVNCDll_ListenForClient(%s %s)\n"),hostname,idcode);
+
+	//adzm 2010-02-15 - Multiple repeaters chosen by modulo of ID
+
+	char finalidcode[_MAX_PATH];
+	//adzm 2010-08 - this was sending uninitialized data over the wire
+	ZeroMemory(finalidcode, sizeof(finalidcode));
+
+	//adzm 2009-06-20
+	if (id) {
+		size_t i = 0;
+
+		for (i = 0; i < strlen(idcode); i++)
+		{
+			finalidcode[i] = toupper(idcode[i]);
+		} 
+		finalidcode[i] = 0;
+
+		if (0 != strncmp("ID:", idcode, 3)) {
+			strcpy(finalidcode, "ID:");
+					
+			for (i = 0; i < strlen(idcode); i++)
+			{
+				finalidcode[i+3] = toupper(idcode[i]);
+			} 
+			finalidcode[i+3] = 0;
+		}
+				
+		//adzm 2010-02-15 - At this point, finalidcode is of the form "ID:#####"
+		int numericId = atoi(finalidcode + 3);
+
+		int numberOfHosts = 1;
+		for (i = 0; i < strlen(hostname); i++) {
+			if (hostname[i] == ';') {
+				numberOfHosts++;
+			}
+		}
+
+		if (numberOfHosts <= 1) {
+			// then hostname == actualhostname
+		} else {
+			int modulo = numericId % numberOfHosts;
+
+			char* szToken = strtok(hostname, ";");
+			while (szToken) {
+				if (modulo == 0) {
+					strcpy(actualhostname, szToken);
+					break;
+				}
+
+				modulo--;
+				szToken = strtok(NULL, ";");
+			}
+		}
+	}
+
+	// Calculate the Display and Port offset.
+	port = INCOMING_PORT_OFFSET;
+	portp = strchr(actualhostname, ':');
+	if (portp)
+	{
+		*portp++ = '\0';
+		if (*portp == ':') // Tight127 method
+		{
+			port = atoi(++portp);		// Port number after "::"
+		}
+		else // RealVNC method
+		{
+			if (atoi(portp) < 100)		// If < 100 after ":" -> display number
+				port += atoi(portp);
+			else
+				port = atoi(portp);	    // If > 100 after ":" -> Port number
+		}
+	}
+			
+	// Attempt to create a new socket
+	VSocket *tmpsock;
+	tmpsock = new VSocket;
+	if (!tmpsock) {
+		vnclog.Print(LL_STATE, VNCLOG("Could not create socket\n"));
+		return -1;
+	}
+			
+	// Connect out to the specified host on the VNCviewer listen port
+	// To be really good, we should allow a display number here but
+	// for now we'll just assume we're connecting to display zero
+	tmpsock->Create();
+	vnclog.Print(LL_STATE, VNCLOG("Connecting to: %s %d\n"),actualhostname,port);
+	if (tmpsock->Connect(actualhostname, port))
+	{
+		vnclog.Print(LL_STATE, VNCLOG("Adding client: %s %d\n"),actualhostname,port);
+		if (id) 
+		{													
+			tmpsock->Send(finalidcode,250);
+			tmpsock->SetTimeout(0);
+			// adzm 2009-07-05 - repeater IDs
+			// Add the new client to this server
+			// adzm 2009-08-02
+			return m_server->AddClient(tmpsock, TRUE, TRUE, 0, NULL, finalidcode, actualhostname, port);
+		} else {
+			// Add the new client to this server
+			// adzm 2009-08-02
+			return m_server->AddClient(tmpsock, TRUE, TRUE, 0, NULL, NULL, actualhostname, port);				
+		}
+	}
+}
+
 //to test the dll stuff
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int iCmdShow)
 {
@@ -1318,8 +1457,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine,
 	WinVNCDll_SetProperties(&prop);
 
 	WinVNCDll_RunServer();
+
+	int auth = WinVNCDll_AuthClientCount();
+	int unauth = WinVNCDll_UnAuthClientCount();
+	int clientid = WinVNCDll_ListenForClient("localhost", "ID:1234");
+	int auth2 = WinVNCDll_AuthClientCount();
+	int unauth2 = WinVNCDll_UnAuthClientCount();
+
 	Sleep(1000 * 1000);
 	WinVNCDll_DestroyServer();
-
 	//Sleep(100 * 1000);
 }

@@ -45,6 +45,15 @@ object Form1: TForm1
       Action = actStop
       TabOrder = 2
     end
+    object Button3: TButton
+      Left = 304
+      Top = 16
+      Width = 121
+      Height = 25
+      Caption = 'Connect to repeater'
+      TabOrder = 3
+      OnClick = Button3Click
+    end
   end
   object GroupBox2: TGroupBox
     Left = 0
@@ -77,6 +86,15 @@ object Form1: TForm1
       Height = 25
       Action = actCloseViewer
       TabOrder = 2
+    end
+    object Button4: TButton
+      Left = 304
+      Top = 17
+      Width = 121
+      Height = 25
+      Caption = 'Viewer via repeater'
+      TabOrder = 3
+      OnClick = Button4Click
     end
   end
   object FlowPanel1: TFlowPanel
@@ -116,5 +134,11 @@ object Form1: TForm1
       Caption = 'Close viewer'
       OnExecute = actCloseViewerExecute
     end
+  end
+  object tmrRepeaterCheck: TTimer
+    Enabled = False
+    OnTimer = tmrRepeaterCheckTimer
+    Left = 464
+    Top = 8
   end
 end

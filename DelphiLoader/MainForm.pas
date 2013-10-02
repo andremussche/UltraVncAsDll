@@ -25,6 +25,9 @@ type
     Button1: TButton;
     Button2: TButton;
     FlowPanel1: TFlowPanel;
+    Button3: TButton;
+    tmrRepeaterCheck: TTimer;
+    Button4: TButton;
     procedure actStartExecute(Sender: TObject);
     procedure actStopExecute(Sender: TObject);
     procedure actLoadExecute(Sender: TObject);
@@ -32,6 +35,9 @@ type
     procedure actLoadViewerExecute(Sender: TObject);
     procedure actAddViewerExecute(Sender: TObject);
     procedure actCloseViewerExecute(Sender: TObject);
+    procedure Button3Click(Sender: TObject);
+    procedure tmrRepeaterCheckTimer(Sender: TObject);
+    procedure Button4Click(Sender: TObject);
   private
     FViewers: TObjectList<TframViewer>;
   public
@@ -59,10 +65,15 @@ begin
   TVncViewerAsDll.VncViewerDll_GetOptions(@options);
 
   options.m_ViewOnly := True;
-  options.m_NoStatus := False;
+  options.m_NoStatus := True;
   options.m_ShowToolbar   := True;
   options.m_nServerScale  := 2;
   options.m_clearPassword := 'test';
+
+//  options.m_proxyhost := 'localhost';
+//  options.m_proxyport := 5901;
+//  options.m_fUseProxy := True;
+
   TVncViewerAsDll.VncViewerDll_SetOptions(@options);
 
 //  ts := TTabSheet.Create(PageControl1);
@@ -77,7 +88,6 @@ begin
 
   //make new VNC client connection
   viewer := TVncViewerAsDll.VncViewerDll_NewConnection('localhost', 5900);
-//  viewer := TVncViewerAsDll.VncViewerDll_NewConnection('pc-9523', 5900);
   fr.EmbedViewer(viewer);
 end;
 
@@ -203,6 +213,59 @@ procedure TForm1.AfterConstruction;
 begin
   inherited;
   FViewers := TObjectList<TframViewer>.Create(True);
+end;
+
+procedure TForm1.Button3Click(Sender: TObject);
+var
+  clientid: Integer;
+begin
+  clientid := TVncServerAsDll.WinVNCDll_ListenForClient('localhost', 'ID:1234');
+  if clientid > 0 then
+    tmrRepeaterCheck.Enabled := True;
+end;
+
+procedure TForm1.tmrRepeaterCheckTimer(Sender: TObject);
+begin
+  tmrRepeaterCheck.Enabled := False;
+  try
+    if TVncServerAsDll.WinVNCDll_UnAuthClientCount = 0 then
+      TVncServerAsDll.WinVNCDll_ListenForClient('localhost', 'ID:1234');
+  finally
+    tmrRepeaterCheck.Enabled := True;
+  end;
+end;
+
+procedure TForm1.Button4Click(Sender: TObject);
+var
+  options: TVNCOptionsStruct;
+  fr: TframViewer;
+  viewer: THandle;
+begin
+  FillChar(options, SizeOf(options), 0);
+  TVncViewerAsDll.VncViewerDll_GetOptions(@options);
+
+  options.m_ViewOnly := True;
+  options.m_NoStatus := False;
+  options.m_ShowToolbar   := True;
+  options.m_nServerScale  := 2;
+  options.m_clearPassword := 'test';
+
+  options.m_proxyhost := 'localhost';
+  options.m_proxyport := 5901;
+  options.m_fUseProxy := True;
+
+  TVncViewerAsDll.VncViewerDll_SetOptions(@options);
+
+  fr := TframViewer.Create(FlowPanel1);
+  fr.Name   := 'viewer' + FormatDateTime('hhnnsszzz', now) + IntToStr(FViewers.Count);
+  fr.Width  := 400;
+  fr.Height := 400;
+  fr.Parent := FlowPanel1;
+  FViewers.Add(fr);
+
+  //make new VNC client connection
+  viewer := TVncViewerAsDll.VncViewerDll_NewConnection('ID', 1234);
+  fr.EmbedViewer(viewer);
 end;
 
 destructor TForm1.Destroy;

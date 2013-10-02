@@ -31,6 +31,9 @@ type
     class function WinVNCDll_SetProperties    (aStruct: PvncPropertiesStruct): Integer;
     class function WinVNCDll_SetPollProperties(aStruct: PvncPropertiesPollStruct): Integer;
     class function WinVNCDll_GetPollProperties(aStruct: PvncPropertiesPollStruct): Integer;
+    class function WinVNCDll_AuthClientCount  (): Integer;
+    class function WinVNCDll_UnAuthClientCount(): Integer;
+    class function WinVNCDll_ListenForClient  (aRemoteClient, aIDCode: PAnsiChar): Integer;
     class function WinVNCDll_RunServer        (): Integer;
     class function WinVNCDll_DestroyServer    (): Integer;
   end;
@@ -138,8 +141,12 @@ type
   TWinVNCDll_SetProperties      = function(aStruct: PvncPropertiesStruct): Integer;stdcall;
   TWinVNCDll_GetPollProperties  = function(aStruct: PvncPropertiesPollStruct): Integer;stdcall;
   TWinVNCDll_SetPollProperties  = function(aStruct: PvncPropertiesPollStruct): Integer;stdcall;
+  TWinVNCDll_AuthClientCount    = function(): Integer;stdcall;
+  TWinVNCDll_UnAuthClientCount  = function(): Integer;stdcall;
+  TWinVNCDll_ListenForClient    = function(aRemoteClient, aIDCode: PAnsiChar): Integer;stdcall;
   TWinVNCDll_RunServer          = function(): Integer;stdcall;
   TWinVNCDll_DestroyServer      = function(): Integer;stdcall;
+
 var
   pWinVNCDll_Init             : TWinVNCDll_Init;
   pWinVNCDll_CreateServer     : TWinVNCDll_CreateServer;
@@ -147,6 +154,9 @@ var
   pWinVNCDll_SetProperties    : TWinVNCDll_SetProperties;
   pWinVNCDll_GetPollProperties: TWinVNCDll_GetPollProperties;
   pWinVNCDll_SetPollProperties: TWinVNCDll_SetPollProperties;
+  pWinVNCDll_AuthClientCount  : TWinVNCDll_AuthClientCount;
+  pWinVNCDll_UnAuthClientCount: TWinVNCDll_UnAuthClientCount;
+  pWinVNCDll_ListenForClient  : TWinVNCDll_ListenForClient;
   pWinVNCDll_RunServer        : TWinVNCDll_RunServer;
   pWinVNCDll_DestroyServer    : TWinVNCDll_DestroyServer;
 
@@ -171,6 +181,9 @@ begin
   pWinVNCDll_SetProperties     := GetProcAddress(FDll, 'WinVNCDll_SetProperties');
   pWinVNCDll_GetPollProperties := GetProcAddress(FDll, 'WinVNCDll_GetPollProperties');
   pWinVNCDll_SetPollProperties := GetProcAddress(FDll, 'WinVNCDll_SetPollProperties');
+  pWinVNCDll_AuthClientCount   := GetProcAddress(FDll, 'WinVNCDll_AuthClientCount');
+  pWinVNCDll_UnAuthClientCount := GetProcAddress(FDll, 'WinVNCDll_UnAuthClientCount');
+  pWinVNCDll_ListenForClient   := GetProcAddress(FDll, 'WinVNCDll_ListenForClient');
   pWinVNCDll_RunServer         := GetProcAddress(FDll, 'WinVNCDll_RunServer');
   pWinVNCDll_DestroyServer     := GetProcAddress(FDll, 'WinVNCDll_DestroyServer');
 end;
@@ -194,6 +207,21 @@ begin
   Assert(Assigned(pWinVNCDll_Init));
   Result := pWinVNCDll_Init(aInstance);
   Assert(Result = 0);
+end;
+
+class function TVncServerAsDll.WinVNCDll_AuthClientCount: Integer;
+begin
+  Assert(FDll > 0);
+  Assert(Assigned(pWinVNCDll_AuthClientCount));
+  Result := pWinVNCDll_AuthClientCount;
+end;
+
+class function TVncServerAsDll.WinVNCDll_ListenForClient(aRemoteClient,
+  aIDCode: PAnsiChar): Integer;
+begin
+  Assert(FDll > 0);
+  Assert(Assigned(pWinVNCDll_ListenForClient));
+  Result := pWinVNCDll_ListenForClient(aRemoteClient, aIDCode);
 end;
 
 class function TVncServerAsDll.WinVNCDll_CreateServer: Integer;
@@ -234,6 +262,13 @@ begin
   Assert(Assigned(pWinVNCDll_SetProperties));
   Result := pWinVNCDll_SetProperties(aStruct);
   Assert(Result = 0);
+end;
+
+class function TVncServerAsDll.WinVNCDll_UnAuthClientCount: Integer;
+begin
+  Assert(FDll > 0);
+  Assert(Assigned(pWinVNCDll_UnAuthClientCount));
+  Result := pWinVNCDll_UnAuthClientCount;
 end;
 
 class function TVncServerAsDll.WinVNCDll_RunServer: Integer;

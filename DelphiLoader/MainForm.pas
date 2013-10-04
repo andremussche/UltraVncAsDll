@@ -28,6 +28,14 @@ type
     Button3: TButton;
     tmrRepeaterCheck: TTimer;
     Button4: TButton;
+    Edit1: TEdit;
+    Label1: TLabel;
+    Label2: TLabel;
+    edtIDServer: TEdit;
+    Label3: TLabel;
+    edtProxyClient: TEdit;
+    Label4: TLabel;
+    edtClientID: TEdit;
     procedure actStartExecute(Sender: TObject);
     procedure actStopExecute(Sender: TObject);
     procedure actLoadExecute(Sender: TObject);
@@ -219,7 +227,7 @@ procedure TForm1.Button3Click(Sender: TObject);
 var
   clientid: Integer;
 begin
-  clientid := TVncServerAsDll.WinVNCDll_ListenForClient('localhost', 'ID:1234');
+  clientid := TVncServerAsDll.WinVNCDll_ListenForClient( PAnsiChar(edtProxyClient.Text), PAnsiChar('ID:' + edtIDServer.Text));
   if clientid > 0 then
     tmrRepeaterCheck.Enabled := True;
 end;
@@ -229,7 +237,7 @@ begin
   tmrRepeaterCheck.Enabled := False;
   try
     if TVncServerAsDll.WinVNCDll_UnAuthClientCount = 0 then
-      TVncServerAsDll.WinVNCDll_ListenForClient('localhost', 'ID:1234');
+      TVncServerAsDll.WinVNCDll_ListenForClient( PAnsiChar(edtProxyClient.Text), PAnsiChar('ID:' + edtIDServer.Text));
   finally
     tmrRepeaterCheck.Enabled := True;
   end;
@@ -240,6 +248,7 @@ var
   options: TVNCOptionsStruct;
   fr: TframViewer;
   viewer: THandle;
+  i: Integer;
 begin
   FillChar(options, SizeOf(options), 0);
   TVncViewerAsDll.VncViewerDll_GetOptions(@options);
@@ -250,7 +259,9 @@ begin
   options.m_nServerScale  := 2;
   options.m_clearPassword := 'test';
 
-  options.m_proxyhost := 'localhost';
+  //options.m_proxyhost := 'localhost';
+  for i := 0 to Length(edtProxyClient.Text)-1 do
+    options.m_proxyhost[i] := AnsiChar(edtProxyClient.Text[i+1]);
   options.m_proxyport := 5901;
   options.m_fUseProxy := True;
 
@@ -264,7 +275,7 @@ begin
   FViewers.Add(fr);
 
   //make new VNC client connection
-  viewer := TVncViewerAsDll.VncViewerDll_NewConnection('ID', 1234);
+  viewer := TVncViewerAsDll.VncViewerDll_NewConnection('ID', StrToInt(edtClientID.Text));
   fr.EmbedViewer(viewer);
 end;
 

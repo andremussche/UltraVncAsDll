@@ -21,6 +21,20 @@ object Form1: TForm1
     Align = alTop
     Caption = ' Server '
     TabOrder = 0
+    object Label1: TLabel
+      Left = 431
+      Top = 21
+      Width = 32
+      Height = 13
+      Caption = 'proxy:'
+    end
+    object Label2: TLabel
+      Left = 599
+      Top = 21
+      Width = 15
+      Height = 13
+      Caption = 'ID:'
+    end
     object btnLoad: TButton
       Left = 8
       Top = 16
@@ -54,6 +68,22 @@ object Form1: TForm1
       TabOrder = 3
       OnClick = Button3Click
     end
+    object Edit1: TEdit
+      Left = 469
+      Top = 18
+      Width = 121
+      Height = 21
+      TabOrder = 4
+      Text = 'localhost'
+    end
+    object edtIDServer: TEdit
+      Left = 620
+      Top = 18
+      Width = 77
+      Height = 21
+      TabOrder = 5
+      Text = '1234'
+    end
   end
   object GroupBox2: TGroupBox
     Left = 0
@@ -63,6 +93,20 @@ object Form1: TForm1
     Align = alTop
     Caption = ' Viewer '
     TabOrder = 1
+    object Label3: TLabel
+      Left = 431
+      Top = 21
+      Width = 32
+      Height = 13
+      Caption = 'proxy:'
+    end
+    object Label4: TLabel
+      Left = 599
+      Top = 21
+      Width = 15
+      Height = 13
+      Caption = 'ID:'
+    end
     object btnClient: TButton
       Left = 8
       Top = 16
@@ -95,6 +139,22 @@ object Form1: TForm1
       Caption = 'Viewer via repeater'
       TabOrder = 3
       OnClick = Button4Click
+    end
+    object edtProxyClient: TEdit
+      Left = 469
+      Top = 18
+      Width = 121
+      Height = 21
+      TabOrder = 4
+      Text = 'localhost'
+    end
+    object edtClientID: TEdit
+      Left = 620
+      Top = 18
+      Width = 77
+      Height = 21
+      TabOrder = 5
+      Text = '1234'
     end
   end
   object FlowPanel1: TFlowPanel
@@ -138,7 +198,7 @@ object Form1: TForm1
   object tmrRepeaterCheck: TTimer
     Enabled = False
     OnTimer = tmrRepeaterCheckTimer
-    Left = 464
-    Top = 8
+    Left = 504
+    Top = 48
   end
 end

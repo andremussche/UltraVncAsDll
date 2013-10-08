@@ -28,7 +28,7 @@ type
     Button3: TButton;
     tmrRepeaterCheck: TTimer;
     Button4: TButton;
-    Edit1: TEdit;
+    edtProxyServer: TEdit;
     Label1: TLabel;
     Label2: TLabel;
     edtIDServer: TEdit;
@@ -227,9 +227,12 @@ procedure TForm1.Button3Click(Sender: TObject);
 var
   clientid: Integer;
 begin
-  clientid := TVncServerAsDll.WinVNCDll_ListenForClient( PAnsiChar(edtProxyClient.Text), PAnsiChar('ID:' + edtIDServer.Text));
+  //clientid := TVncServerAsDll.WinVNCDll_ListenForClient( PAnsiChar(edtProxyServer.Text), PAnsiChar('ID:' + edtIDServer.Text));
+  clientid := TVncServerAsDll.WinVNCDll_ListenForClient( PAnsiChar(AnsiString(edtProxyServer.Text)), PAnsiChar(AnsiString(edtIDServer.Text)));
   if clientid > 0 then
-    tmrRepeaterCheck.Enabled := True;
+    tmrRepeaterCheck.Enabled := True
+  else
+    MessageDlg('Could not listen for client via repeater', mtError, [mbOK], 0);
 end;
 
 procedure TForm1.tmrRepeaterCheckTimer(Sender: TObject);
@@ -237,7 +240,7 @@ begin
   tmrRepeaterCheck.Enabled := False;
   try
     if TVncServerAsDll.WinVNCDll_UnAuthClientCount = 0 then
-      TVncServerAsDll.WinVNCDll_ListenForClient( PAnsiChar(edtProxyClient.Text), PAnsiChar('ID:' + edtIDServer.Text));
+      TVncServerAsDll.WinVNCDll_ListenForClient( PAnsiChar(AnsiString(edtProxyServer.Text)), PAnsiChar(AnsiString(edtIDServer.Text)));
   finally
     tmrRepeaterCheck.Enabled := True;
   end;
@@ -260,6 +263,8 @@ begin
   options.m_clearPassword := 'test';
 
   //options.m_proxyhost := 'localhost';
+  for i := 0 to High(options.m_proxyhost) do
+    options.m_proxyhost[i] := #0;
   for i := 0 to Length(edtProxyClient.Text)-1 do
     options.m_proxyhost[i] := AnsiChar(edtProxyClient.Text[i+1]);
   options.m_proxyport := 5901;

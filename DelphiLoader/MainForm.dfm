@@ -68,7 +68,7 @@ object Form1: TForm1
       TabOrder = 3
       OnClick = Button3Click
     end
-    object Edit1: TEdit
+    object edtProxyServer: TEdit
       Left = 469
       Top = 18
       Width = 121

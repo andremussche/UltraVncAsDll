@@ -199,6 +199,8 @@ begin
   props.AllowLoopback := 1;
 //  props.LoopbackOnly := 1;
 
+  props.ConnectPriority := 1; //keep existing connections!
+
   TVncServerAsDll.WinVNCDll_SetProperties(@props);
 
   //setup
@@ -239,7 +241,8 @@ procedure TForm1.tmrRepeaterCheckTimer(Sender: TObject);
 begin
   tmrRepeaterCheck.Enabled := False;
   try
-    if TVncServerAsDll.WinVNCDll_UnAuthClientCount = 0 then
+    if (TVncServerAsDll.WinVNCDll_UnAuthClientCount = 0) and
+       (TVncServerAsDll.WinVNCDll_AuthClientCount = 0) then
       TVncServerAsDll.WinVNCDll_ListenForClient( PAnsiChar(AnsiString(edtProxyServer.Text)), PAnsiChar(AnsiString(edtIDServer.Text)));
   finally
     tmrRepeaterCheck.Enabled := True;

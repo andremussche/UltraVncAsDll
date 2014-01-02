@@ -1208,6 +1208,7 @@ HWND VncViewerDll_NewConnection(char* aHost, int aPort)
 	ClientConnection *conn = m_app->NewConnection2(false, aHost, aPort);
 	lastconn = conn;
 
+	if (!conn) { return 0; };
 	return conn->m_hwndMain;	
 	//ShowWindow(conn->m_hwndMain, SW_SHOWNORMAL);
 	//SetWindowPos(h, HWND_TOP,
@@ -1236,6 +1237,13 @@ HWND VncViewerDll_ToolbarWindow()
 extern "C" DLLEXPORT /*export without name mangling*/
 int VncViewerDll_CloseConnection(HWND aConnectionWindow)
 {
+	if ( (lastconn) &&
+	     (lastconn->m_hwndMain == aConnectionWindow) )
+	{
+		lastconn->CloseWindows();
+		//delete lastconn;
+	}
+	else
 	CloseWindow(aConnectionWindow);
 	return 0; //OK
 }
